@@ -1,0 +1,31 @@
+{
+  "name": "multiparty",
+  "version": "0.0.0",
+  "description": "Bitcoin Multi Signature Address Creation and Signing Script v0.2. By OutCast3k.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "beefy --live src/app.coffee",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/christopherdebeer/multiparty.git"
+  },
+  "author": "Christopher de Beer",
+  "license": "NONE",
+  "readmeFilename": "README.md",
+  "gitHead": "1abd7a1780b8b5dfb644f5ec6f50e4eb73f08c71",
+  "dependencies": {
+    "coffee-script": "~1.6.3",
+    "beefy": "~0.7.1",
+    "browserify": "~3.20.0",
+    "coffeeify": "~0.5.2",
+    "backbone": "~1.1.2"
+  },
+  "browser": "src/app.coffee",
+  "browserify": {
+    "transform": [
+      "coffeeify"
+    ]
+  }
+}
