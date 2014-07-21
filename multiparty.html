@@ -4,6 +4,7 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.18/angular.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.10.0/ui-bootstrap-tpls.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.18/angular-touch.js"></script>
+    <script src="/js/bitcoinjs-min.js"></script>
     <script src="/src/app.coffee"></script>
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="css/multiparty.css">
@@ -23,7 +24,7 @@
             <div class="form-group">
               <p ng-model="address.keys.public">{{address.keys.public}}</p>
               <p ng-model="address.keys.private">{{address.keys.private}}</p>
-              <button ng-click="address.genKeys()" type="button" class="btn btn-primary">Generate</button>
+              <button ng-click="gen()" type="button" class="btn btn-primary">Generate</button>
             </div>
             <div class="form-group">
               <label for="">m</label>/<label for="">n</label>
@@ -41,8 +42,8 @@
         <div class="modal-header"><button ng-click="back()" type="button" class="btn btn-primary">Back</button> {{address.name}}</div>
         <div class="modal-body">
           <h1>{{address.name}}</h1>
-          <p>pub: {{address.keys.private}}</p>
-          <p>priv: {{address.keys.public}}</p>
+          <p>private: {{address.keys.private}}</p>
+          <p>public: {{address.keys.public}}</p>
           <p>{{address.m}}/{{address.n}}</p>
         </div>
         <div class="modal-footer">
