@@ -2,7 +2,7 @@
   "name": "multiparty",
   "version": "0.0.0",
   "description": "Bitcoin Multi Signature Address Creation and Signing Script v0.2. By OutCast3k.",
-  "main": "index.js",
+  "main": "src/app.coffee",
   "scripts": {
     "dev": "beefy --live src/app.coffee",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -21,9 +21,12 @@
     "browserify": "~3.20.0",
     "coffeeify": "~0.5.2",
     "backbone": "~1.1.2",
-    "bitcoinjs-lib": "~0.1.3"
+    "bitcoinjs-lib": "~0.1.3",
+    "crypto-js": "~3.1.2-5",
+    "thjs": "0.0.49",
+    "telehash-js": "~0.1.41",
+    "mnemonic": "~1.0.1"
   },
-  "browser": "src/app.coffee",
   "browserify": {
     "transform": [
       "coffeeify"

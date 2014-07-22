@@ -1,62 +1,106 @@
 
 Backbone = require('backbone')
+Entropy = window.E = require( './Entropy.coffee' )
+
 
 
 
 class Address extends Backbone.Model
-  initialize: ({@name, @m, @n} ={})->
+  initialize: ({name, m, n} ={}) ->
     @genKeys()
-    @set( 'name', @get('name') or 'Untitled' )
-    @set( 'm', @get('m') or 1 )
-    @set( 'n', @get('n') or 1 )
-    @set( 'txs', @get('txs') or 0 )
+    @set( 'name', name or 'Untitled' )
+    @set( 'm', m or 1 )
+    @set( 'n', n or 1 )
+    @set( 'txs', 0 )
 
   genKeys: ->
-    console.log 'gen keys'
-    addr = new Bitcoin.Address( Bitcoin.Address.decodeString('1KbZMsBkwgC9Tygh86wbKrFeqPDLNW2rde') )
+    PrivateKey = Bitcoin.ECKey.makeRandom( false )
+
     @set 'keys',
-      private: "05#{ Math.random() * 999999 }"
-      public: addr.toString()
+      address: PrivateKey.pub.getAddress().toString()
+      private: PrivateKey.toWIF()
+      public: PrivateKey.pub.toHex()
 
 class AddressCollection extends Backbone.Collection
   model: Address
 
-addresses = window.addresses = (new AddressCollection( [ new Address( name: 'Test' ) ] )).toJSON()
-console.log addresses
+addresses = window.addresses = []
 
 
-app = angular.module 'multiparty', ['ui.bootstrap', 'ngTouch']
+
+app = angular.module 'multiparty', ['ui.bootstrap', 'ngTouch', 'Entropy']
 
 app.controller 'AddressesCtrl', ['$scope', ($scope) ->
   $scope.addresses = addresses
   $scope.add = (address) ->
     $scope.addresses.push( address )
-
 ]
+
+app.directive 'addressList', ->
+  template: """
+  <ul class="addresses list-group" ng-controller="AddressesCtrl">
+    <li class="address list-group-item" ng-repeat="address in addresses"  ng-swipe-left="showActions = false" ng-swipe-right="showActions = true" >
+      <div class="actions" ng-show="showActions">
+        <span class="glyphicon glyphicon-remove" ng-click="remove(address)"></span>
+      </div>
+      <div class="info" ng-controller="AddressCtrl" ng-click="show(address); showActions = false" >
+        <span class="title">{{address.name}}</span>
+        <span class="badge alert-success">{{address.txs || 0}}</span>
+        <span class="badge alert-success">{{address.m}}/{{address.n}}</span>
+      </div>                  
+    </li>
+
+    <li class="list-group-item" class="create" ng-controller="CreateNewCtrl">
+        <button ng-click="open()" type="button" class="btn btn-primary">Create</button>
+    </li>
+  </ul>
+  """
+
+
 
 app.controller 'CreateNewCtrl', ['$scope', '$modal', ($scope, $modal) ->
   CreateNewInstanceCtrl = ($scope, $modalInstance) ->
-
-    $scope.addressModel = new Address( name: 'Untitled' )
+    
+    $scope.addressModel = new Address()
     $scope.address = $scope.addressModel.toJSON()
 
     $scope.ok = ->
-      console.log 'ok', $scope.address, $scope.$parent, addresses
       addresses.push $scope.address
       $modalInstance.close()
 
-    $scope.cancel = (x) ->
-      console.log $scope, x
-      # $modalInstance.dismiss('cancel')
+    $scope.cancel = -> $modalInstance.dismiss('cancel')
 
     $scope.gen = ->
-      $scope.addressModel.genKeys()
+      $scope.addressModel = new Address( name: $scope.address.name )
       $scope.address = $scope.addressModel.toJSON()
 
 
   $scope.open = (size) ->
     modal = $modal.open
-      templateUrl: '/create_new.html'
+      template: """
+      <div class="modal-header">New multiparty Root Key : {{address.name}}</div>
+      <div class="modal-body">
+        <form class="form">
+          <div class="form-group">
+            <input type="text" placeholder="Name" ng-model="address.name">
+          </div>
+          <div class="form-group">
+            <p>address: {{address.keys.address}}</p>
+            <p>public: {{address.keys.public}}</p>
+            <p>private: {{address.keys.private}}</p>
+            <button ng-click="gen()" type="button" class="btn btn-primary">Generate</button>
+          </div>
+          <div class="form-group">
+            <label for="">m</label>/<label for="">n</label>
+            <input type="number" value="1" ng-model="address.m">/<input type="number" value="1" ng-model="address.n">
+          </div>
+        </form>
+      </div>
+      <div class="modal-body">
+        <button ng-click="cancel()" type="button" class="btn btn-primary">Cancel</button>
+        <button ng-click="ok()" type="button" class="btn btn-primary">Ok</button>
+      </div>
+      """
       controller: CreateNewInstanceCtrl
       size: size
 ]
@@ -68,37 +112,29 @@ app.controller 'CreateNewCtrl', ['$scope', '$modal', ($scope, $modal) ->
 app.controller 'AddressCtrl', ['$scope', '$modal', ($scope, $modal) ->
   AddressInstanceCtrl = ($scope, $modalInstance, address) ->
     $scope.address = address 
-    console.log 'address instance ctrl', $scope, $modalInstance, address
     $scope.back = ->
       $modalInstance.dismiss('cancel')
 
   $scope.show = (address) ->
-    console.log address, $scope
     modal = $modal.open
-      templateUrl: '/address.html'
       controller: AddressInstanceCtrl
       resolve:
         address: -> address
+      template: """
+        <div class="modal-header"><button ng-click="back()" type="button" class="btn btn-primary">Back</button> {{address.name}}</div>
+        <div class="modal-body">
+          <h1>{{address.name}}</h1>
+          <p>address: {{address.keys.address}}</p>
+          <p>public: {{address.keys.public}}</p>
+          <p>private: {{address.keys.private}}</p>
+          <p>{{address.m}}/{{address.n}}</p>
+        </div>
+        <div class="modal-footer">
+          
+        </div>
+      """
 ]
 
 
 
 
-app.controller 'EntropyCtrl', ['$scope', ($scope) ->
-  $scope.clse = false
-  $scope.done = false
-  $scope.max = 100
-  $scope.value = 0
-  $scope.entropy = 0
-  $scope.type = 'info'
-
-  $scope.addEntropy = ($event) =>
-    unless $scope.done or $scope.wait
-      $scope.entropy = $scope.entropy + $event.pageX
-      $scope.value = $scope.value + 1
-      $scope.wait = true
-      setTimeout ( -> $scope.wait = false ), 4
-      if $scope.value >= 100
-        $scope.type = 'success'
-        $scope.done = true
-]

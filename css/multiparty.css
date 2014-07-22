@@ -4,8 +4,21 @@
 
 .entropy {
 	z-index: 99999;
-	padding: 1em;
 	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	pointer-events: none;
+}
+
+.entropy .wrapper {
+	pointer-events: all;
+	text-align: center;
+	padding-top: 35%;
+	font-size: 10px;
+	height: auto;
+	position: absolute;
 	top: 0;
 	left: 0;
 	right: 0;
@@ -13,12 +26,9 @@
 	background-color: white;
 }
 
-.entropy .content {
-	text-align: center;
-	margin: 0 auto;
-	margin-top: 35%;
-	font-size: 10px;
+.entropy .wrapper .content {
 	max-width: 30em;
+	margin: 0 auto;
 }
 
 .entropy .content h1 {
