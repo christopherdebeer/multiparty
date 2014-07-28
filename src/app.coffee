@@ -6,12 +6,14 @@ Entropy = window.E = require( './Entropy.coffee' )
 
 
 class Address extends Backbone.Model
-  initialize: ({name, m, n} ={}) ->
+  initialize: ({name, m, n, p} ={}) ->
     @genKeys()
     @set( 'name', name or 'Untitled' )
+    @set( 'p', p or [] )
     @set( 'm', m or 1 )
-    @set( 'n', n or 1 )
+    @set( 'n', @get('p').length + 1 )
     @set( 'txs', 0 )
+    @genASM()
 
   genKeys: ->
     PrivateKey = Bitcoin.ECKey.makeRandom( false )
@@ -20,7 +22,12 @@ class Address extends Backbone.Model
       address: PrivateKey.pub.getAddress().toString()
       private: PrivateKey.toWIF()
       public: PrivateKey.pub.toHex()
-
+  
+  genASM: ->
+    pubKeys = [@get('keys').public].concat( x for x in @get('p') ).map Bitcoin.ECPubKey.fromHex
+    Script = Bitcoin.scripts.multisigOutput( @get('m'), pubKeys )
+    @set( 'asm', Script.toASM() )
+    
 class AddressCollection extends Backbone.Collection
   model: Address
 
@@ -153,18 +160,21 @@ app.controller 'AddressCtrl', ['$scope', '$modal', ($scope, $modal) ->
       $modalInstance.dismiss('cancel')
 
   $scope.show = (address) ->
+    console.log address
     modal = $modal.open
       controller: AddressInstanceCtrl
       resolve:
         address: -> address
       template: """
         <div class="modal-header"><button ng-click="back()" type="button" class="btn btn-primary">Back</button></div>
-        <div class="modal-body">
-          <h1>{{address.name}}</h1>
-          <p>address: {{address.keys.address}}</p>
-          <p>public: {{address.keys.public}}</p>
-          <p>private: {{address.keys.private}}</p>
-          <p>{{address.m}}/{{address.n}}</p>
+        <div class="modal-body address" >
+          <div class="info">
+            <h1>{{address.name}} <span>{{address.m}}/{{address.n}}</span></h1>
+            <p>address: <span class="data well">{{address.keys.address}}</span></p>
+            <p>public: <span class="data well">{{address.keys.public}}</span></p>
+            <p>private: <span class="data well">{{address.keys.private}}</span></p>
+            <p>Script: <span class="data well">{{address.asm}}</span></p>
+          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-primary">Create TX</button>

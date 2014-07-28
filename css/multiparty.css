@@ -57,9 +57,7 @@
 }
 
 .modal-dialog .modal-content p {
-	text-overflow: ellipsis;
-	white-space: nowrap;
-	overflow: hidden;
+	word-wrap: break-word;
 }
 
 /* ###########################
@@ -88,4 +86,11 @@
 }
 .addresses .title {
 	font-weight: bold;
+}
+
+
+.address .info .data {
+	font-family: monospace;
+	word-wrap: break-word;
+	display: block;
 }
