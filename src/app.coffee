@@ -28,12 +28,49 @@ addresses = window.addresses = []
 
 
 
-app = angular.module 'multiparty', ['ui.bootstrap', 'ngTouch', 'Entropy']
 
-app.controller 'AddressesCtrl', ['$scope', ($scope) ->
-  $scope.addresses = addresses
-  $scope.add = (address) ->
-    $scope.addresses.push( address )
+
+
+app = angular.module 'multiparty', ['ui.bootstrap', 'ngTouch', 'Entropy', 'ngStorage']
+
+
+app.run ['$rootScope', ($rootScope) ->
+  console.log 'running...'
+
+  #let everthing know that we need to save state now.
+  window.onbeforeunload = (event) ->
+    console.log 'save state'
+    $rootScope.$broadcast( 'savestate' )
+]
+
+
+app.factory 'UserService', ['$rootScope', ($rootScope) ->
+  service =
+    addrs: angular.fromJson( sessionStorage.userService ) or addresses
+    list: -> service.addrs
+    add: (a) ->
+      service.addrs.push a
+      service.save()
+    remove: (a) -> 
+      idx = service.addrs.indexOf( a )
+      service.addrs.splice( idx, 1 ) if idx > -1
+      service.save()
+    save: -> 
+      console.log 'saving...'
+      sessionStorage.userService = angular.toJson( service.addrs )
+    restore: -> 
+      console.log 'restoring...'
+      service.addrs = angular.fromJson( sessionStorage.userService )
+
+  $rootScope.$on( "savestate", service.save )
+  $rootScope.$on( "restorestate", service.restore ) 
+  service
+]
+
+app.controller 'AddressesCtrl', ['$scope', 'UserService', ($scope, UserService) ->
+  $scope.addresses = UserService.list()
+  $scope.add = (a) -> UserService.add( a )
+  $scope.remove = (a) -> window.confirm( 'Are you sure?' ) and UserService.remove( a )
 ]
 
 app.directive 'addressList', ->
@@ -58,14 +95,14 @@ app.directive 'addressList', ->
 
 
 
-app.controller 'CreateNewCtrl', ['$scope', '$modal', ($scope, $modal) ->
+app.controller 'CreateNewCtrl', ['$scope', '$modal', 'UserService', ($scope, $modal, UserService) ->
   CreateNewInstanceCtrl = ($scope, $modalInstance) ->
     
     $scope.addressModel = new Address()
     $scope.address = $scope.addressModel.toJSON()
 
     $scope.ok = ->
-      addresses.push $scope.address
+      UserService.add( $scope.address )
       $modalInstance.close()
 
     $scope.cancel = -> $modalInstance.dismiss('cancel')
@@ -121,7 +158,7 @@ app.controller 'AddressCtrl', ['$scope', '$modal', ($scope, $modal) ->
       resolve:
         address: -> address
       template: """
-        <div class="modal-header"><button ng-click="back()" type="button" class="btn btn-primary">Back</button> {{address.name}}</div>
+        <div class="modal-header"><button ng-click="back()" type="button" class="btn btn-primary">Back</button></div>
         <div class="modal-body">
           <h1>{{address.name}}</h1>
           <p>address: {{address.keys.address}}</p>
@@ -130,7 +167,8 @@ app.controller 'AddressCtrl', ['$scope', '$modal', ($scope, $modal) ->
           <p>{{address.m}}/{{address.n}}</p>
         </div>
         <div class="modal-footer">
-          
+          <button type="button" class="btn btn-primary">Create TX</button>
+          <button type="button" class="btn btn-primary">Add Party</button>
         </div>
       """
 ]

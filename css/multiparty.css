@@ -56,6 +56,11 @@
 	border: 0 none;
 }
 
+.modal-dialog .modal-content p {
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	overflow: hidden;
+}
 
 /* ###########################
 # Address list
